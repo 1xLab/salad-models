@@ -33,6 +33,8 @@ jobs:
           push: true
           tags: ghcr.io/1xlab/nemotron3-nano-30b-a3b:latest
           provenance: false
+          build-args: |
+            HF_TOKEN=${{ secrets.HF_TOKEN }}
 
   build-qwen:
     runs-on: ubuntu-latest
@@ -54,3 +56,5 @@ jobs:
           push: true
           tags: ghcr.io/1xlab/qwen36-35b-a3b:latest
           provenance: false
+          build-args: |
+            HF_TOKEN=${{ secrets.HF_TOKEN }}
