@@ -1,0 +1,7 @@
+FROM ghcr.io/ggml-org/llama.cpp:server-cuda
+
+RUN mkdir -p /models && \
+    curl -L --fail -o /models/model.gguf \
+    "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf"
+
+ENV LLAMA_ARG_MODEL=/models/model.gguf

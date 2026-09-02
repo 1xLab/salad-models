@@ -1,0 +1,7 @@
+FROM ghcr.io/ggml-org/llama.cpp:server-cuda
+
+RUN mkdir -p /models && \
+    curl -L --fail -o /models/model.gguf \
+    "https://huggingface.co/ggml-org/NVIDIA-Nemotron-3-Nano-30B-A3B-GGUF/resolve/main/NVIDIA-Nemotron-3-Nano-30B-A3B-Q4_K_M.gguf"
+
+ENV LLAMA_ARG_MODEL=/models/model.gguf
