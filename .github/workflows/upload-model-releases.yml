@@ -1,0 +1,58 @@
+name: Upload Models to GitHub Releases
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release-nemotron:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Nemotron GGUF
+        run: |
+          mkdir -p /tmp/nemotron && cd /tmp/nemotron
+          curl -L --fail -H "Authorization: Bearer ${{ secrets.HF_TOKEN }}" \
+            -o model.gguf \
+            "https://huggingface.co/ggml-org/NVIDIA-Nemotron-3-Nano-30B-A3B-GGUF/resolve/main/NVIDIA-Nemotron-3-Nano-30B-A3B-Q4_K_M.gguf"
+
+      - name: Split and Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd /tmp/nemotron
+          split -b 1900M -d -a 2 model.gguf nemotron.part.
+          rm model.gguf
+          gh release delete v1.0-nemotron -y --repo 1xLab/salad-models 2>/dev/null || true
+          gh release create v1.0-nemotron nemotron.part.* \
+            --repo 1xLab/salad-models \
+            --title "Nemotron 3 Nano 30B GGUF" \
+            --notes "Split weights for Salad runner download"
+
+  release-qwen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Qwen GGUF
+        run: |
+          mkdir -p /tmp/qwen && cd /tmp/qwen
+          curl -L --fail -H "Authorization: Bearer ${{ secrets.HF_TOKEN }}" \
+            -o model.gguf \
+            "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf"
+
+      - name: Split and Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd /tmp/qwen
+          split -b 1900M -d -a 2 model.gguf qwen.part.
+          rm model.gguf
+          gh release delete v1.0-qwen -y --repo 1xLab/salad-models 2>/dev/null || true
+          gh release create v1.0-qwen qwen.part.* \
+            --repo 1xLab/salad-models \
+            --title "Qwen 3.6 35B GGUF" \
+            --notes "Split weights for Salad runner download"
