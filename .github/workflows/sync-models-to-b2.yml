@@ -1,0 +1,59 @@
+name: Sync Models from GHCR to Backblaze B2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync-models:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install rclone
+        run: sudo apt-get update && sudo apt-get install -y rclone
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract & Upload Qwen to B2
+        env:
+          RCLONE_CONFIG_B2_TYPE: s3
+          RCLONE_CONFIG_B2_PROVIDER: Other
+          RCLONE_CONFIG_B2_ACCESS_KEY_ID: ${{ secrets.B2_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_B2_SECRET_ACCESS_KEY: ${{ secrets.B2_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_B2_ENDPOINT: ${{ secrets.B2_ENDPOINT }}
+        run: |
+          echo "Pulling Qwen image from GHCR..."
+          docker pull ghcr.io/1xlab/qwen36-35b-a3b:latest
+          docker create --name temp-qwen ghcr.io/1xlab/qwen36-35b-a3b:latest
+          mkdir -p /tmp/models
+          docker cp temp-qwen:/models/model.gguf /tmp/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
+          docker rm temp-qwen
+          docker rmi ghcr.io/1xlab/qwen36-35b-a3b:latest
+
+          echo "Uploading Qwen to Backblaze B2..."
+          rclone copy /tmp/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf "b2:${{ secrets.B2_BUCKET }}/models/" \
+            --progress --s3-chunk-size 64M --transfers 8 --multi-thread-streams 8
+          rm -f /tmp/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
+
+      - name: Extract & Upload Nemotron to B2
+        env:
+          RCLONE_CONFIG_B2_TYPE: s3
+          RCLONE_CONFIG_B2_PROVIDER: Other
+          RCLONE_CONFIG_B2_ACCESS_KEY_ID: ${{ secrets.B2_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_B2_SECRET_ACCESS_KEY: ${{ secrets.B2_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_B2_ENDPOINT: ${{ secrets.B2_ENDPOINT }}
+        run: |
+          echo "Pulling Nemotron image from GHCR..."
+          docker pull ghcr.io/1xlab/nemotron3-nano-30b-a3b:latest
+          docker create --name temp-nemotron ghcr.io/1xlab/nemotron3-nano-30b-a3b:latest
+          docker cp temp-nemotron:/models/model.gguf /tmp/models/NVIDIA-Nemotron-3-Nano-30B-A3B-Q4_K_M.gguf
+          docker rm temp-nemotron
+          docker rmi ghcr.io/1xlab/nemotron3-nano-30b-a3b:latest
+
+          echo "Uploading Nemotron to Backblaze B2..."
+          rclone copy /tmp/models/NVIDIA-Nemotron-3-Nano-30B-A3B-Q4_K_M.gguf "b2:${{ secrets.B2_BUCKET }}/models/" \
+            --progress --s3-chunk-size 64M --transfers 8 --multi-thread-streams 8
+          rm -f /tmp/models/NVIDIA-Nemotron-3-Nano-30B-A3B-Q4_K_M.gguf

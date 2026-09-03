@@ -1,5 +1,7 @@
 FROM ghcr.io/ggml-org/llama.cpp:server-cuda
 
+RUN apt-get update && apt-get install -y --no-install-recommends rclone ca-certificates && rm -rf /var/lib/apt/lists/*
+
 COPY start-nemotron.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
