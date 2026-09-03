@@ -35,7 +35,7 @@ jobs:
 
           echo "Uploading Qwen to Backblaze B2..."
           rclone copy /tmp/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf "b2:${{ secrets.B2_BUCKET }}/models/" \
-            --progress --s3-chunk-size 64M --transfers 8 --multi-thread-streams 8
+            --progress --s3-no-check-bucket --s3-chunk-size 64M --transfers 8 --multi-thread-streams 8
           rm -f /tmp/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
 
       - name: Extract & Upload Nemotron to B2
@@ -55,5 +55,5 @@ jobs:
 
           echo "Uploading Nemotron to Backblaze B2..."
           rclone copy /tmp/models/NVIDIA-Nemotron-3-Nano-30B-A3B-Q4_K_M.gguf "b2:${{ secrets.B2_BUCKET }}/models/" \
-            --progress --s3-chunk-size 64M --transfers 8 --multi-thread-streams 8
+            --progress --s3-no-check-bucket --s3-chunk-size 64M --transfers 8 --multi-thread-streams 8
           rm -f /tmp/models/NVIDIA-Nemotron-3-Nano-30B-A3B-Q4_K_M.gguf
