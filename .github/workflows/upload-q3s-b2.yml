@@ -1,0 +1,27 @@
+name: Upload Qwen Q3_K_S to Backblaze B2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  upload-q3s:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install rclone
+        run: sudo apt-get update && sudo apt-get install -y rclone
+
+      - name: Direct Datacenter Stream HF to B2
+        env:
+          RCLONE_CONFIG_B2_TYPE: s3
+          RCLONE_CONFIG_B2_PROVIDER: Other
+          RCLONE_CONFIG_B2_ACCESS_KEY_ID: ${{ secrets.B2_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_B2_SECRET_ACCESS_KEY: ${{ secrets.B2_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_B2_ENDPOINT: ${{ secrets.B2_ENDPOINT }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          echo "Streaming Qwen Q3_K_S directly from HuggingFace to Backblaze B2 at datacenter speed (1+ Gbps)..."
+          curl -L --fail -H "Authorization: Bearer $HF_TOKEN" \
+            "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q3_K_S.gguf" \
+            | rclone rcat "b2:${{ secrets.B2_BUCKET }}/models/Qwen3.6-35B-A3B-UD-Q3_K_S.gguf" \
+              --s3-no-check-bucket --s3-chunk-size 64M --s3-upload-concurrency 8 --progress
+          echo "Upload complete!"
